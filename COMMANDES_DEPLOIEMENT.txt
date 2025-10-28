@@ -1,0 +1,242 @@
+═══════════════════════════════════════════════════════════════
+  COMMANDES DE DÉPLOIEMENT - APPLICATION KOK
+  Projet Vercel ID: hIcZzJfKyVMFAGh2QVfMzXc6
+═══════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────┐
+│ ÉTAPE 1: DÉPLOYER LE BACKEND (Railway)                     │
+└─────────────────────────────────────────────────────────────┘
+
+# 1.1 - Installer Railway CLI
+npm install -g @railway/cli
+
+# 1.2 - Se connecter à Railway
+railway login
+
+# 1.3 - Aller dans le dossier backend
+cd backend
+
+# 1.4 - Initialiser le projet
+railway init
+
+# 1.5 - Déployer
+railway up
+
+# 1.6 - Configurer les variables d'environnement
+railway variables set DATABASE_URL="postgresql://neondb_owner:npg_1zDVUWYjNB4s@ep-young-darkness-abdxzpai-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+railway variables set JWT_SECRET="CHANGEZ_CETTE_VALEUR_AVEC_UN_SECRET_FORT"
+railway variables set NODE_ENV="production"
+railway variables set ADMIN_EMAIL="admin@example.com"
+railway variables set ADMIN_PASSWORD="VotreMotDePasse123!"
+railway variables set SMTP_HOST="smtp.gmail.com"
+railway variables set SMTP_PORT="587"
+railway variables set SMTP_USER="votre-email@gmail.com"
+railway variables set SMTP_PASS="votre-mot-de-passe-application"
+railway variables set FROM_EMAIL="noreply@votre-domaine.com"
+
+# 1.7 - Générer un JWT Secret fort
+openssl rand -base64 32
+# Copiez le résultat et utilisez-le pour remplacer "CHANGEZ_CETTE_VALEUR_AVEC_UN_SECRET_FORT" ci-dessus
+
+# 1.8 - Initialiser la base de données
+railway run npm run migrate
+railway run npm run seed
+
+# 1.9 - Obtenir l'URL publique du backend
+railway domain
+
+# NOTE: Copiez l'URL affichée (ex: https://kok-backend-production-xxxx.up.railway.app)
+# Vous en aurez besoin pour le frontend !
+
+┌─────────────────────────────────────────────────────────────┐
+│ ÉTAPE 2: DÉPLOYER LE FRONTEND (Vercel)                     │
+└─────────────────────────────────────────────────────────────┘
+
+# 2.1 - Revenir à la racine du projet
+cd ..
+
+# 2.2 - Installer Vercel CLI
+npm install -g vercel
+
+# 2.3 - Se connecter à Vercel
+vercel login
+
+# 2.4 - Aller dans le dossier frontend
+cd frontend
+
+# 2.5 - Lier au projet Vercel existant
+vercel link --project-id hIcZzJfKyVMFAGh2QVfMzXc6
+
+# 2.6 - Configurer la variable d'environnement (URL du backend)
+vercel env add NEXT_PUBLIC_API_URL production
+# Quand demandé, entrez: https://kok-backend-production-xxxx.up.railway.app
+# (Remplacez par l'URL obtenue à l'étape 1.9)
+
+# 2.7 - Déployer en production
+vercel --prod
+
+# NOTE: Vercel affichera l'URL de votre application déployée
+# Ex: https://votre-app-hiczz.vercel.app
+
+┌─────────────────────────────────────────────────────────────┐
+│ ÉTAPE 3: METTRE À JOUR LE CORS (Backend)                   │
+└─────────────────────────────────────────────────────────────┘
+
+# 3.1 - Retourner au backend
+cd ../backend
+
+# 3.2 - Configurer l'URL du frontend pour CORS
+railway variables set FRONTEND_URL="https://votre-app-hiczz.vercel.app"
+# (Remplacez par l'URL Vercel obtenue à l'étape 2.7)
+
+# 3.3 - Redémarrer le backend
+railway restart
+
+┌─────────────────────────────────────────────────────────────┐
+│ ÉTAPE 4: TESTER L'APPLICATION                               │
+└─────────────────────────────────────────────────────────────┘
+
+# 4.1 - Revenir à la racine
+cd ..
+
+# 4.2 - Rendre le script de test exécutable (si pas déjà fait)
+chmod +x test-user-scenarios.sh
+
+# 4.3 - Exécuter les tests automatisés
+./test-user-scenarios.sh https://kok-backend-production-xxxx.up.railway.app
+# (Remplacez par votre URL backend)
+
+# 4.4 - Tester manuellement dans le navigateur
+# Ouvrir: https://votre-app-hiczz.vercel.app
+
+═══════════════════════════════════════════════════════════════
+  COMMANDES DE VÉRIFICATION
+═══════════════════════════════════════════════════════════════
+
+# Vérifier le statut du backend Railway
+railway status
+
+# Voir les logs du backend
+railway logs
+
+# Lister les variables d'environnement Railway
+railway variables
+
+# Vérifier les déploiements Vercel
+vercel ls
+
+# Lister les variables d'environnement Vercel
+vercel env ls
+
+# Vérifier la santé du backend
+curl https://kok-backend-production-xxxx.up.railway.app/health
+
+═══════════════════════════════════════════════════════════════
+  COMMANDES DE GESTION
+═══════════════════════════════════════════════════════════════
+
+# Redéployer le backend
+cd backend && railway up
+
+# Redéployer le frontend
+cd frontend && vercel --prod
+
+# Exécuter les migrations
+cd backend && railway run npm run migrate
+
+# Créer des données de test
+cd backend && railway run npm run seed
+
+# Ouvrir le dashboard Railway
+railway open
+
+# Ouvrir le dashboard Vercel dans le navigateur
+# https://vercel.com/dashboard
+
+═══════════════════════════════════════════════════════════════
+  URLS IMPORTANTES
+═══════════════════════════════════════════════════════════════
+
+Frontend (Vercel):        https://votre-app-hiczz.vercel.app
+Backend (Railway):        https://kok-backend-production-xxxx.up.railway.app
+Dashboard Vercel:         https://vercel.com/dashboard
+Dashboard Railway:        https://railway.app/dashboard
+Console Neon DB:          https://console.neon.tech
+Pull Request GitHub:      https://github.com/doriansarry47-creator/kok/pull/1
+
+═══════════════════════════════════════════════════════════════
+  VARIABLES D'ENVIRONNEMENT À CONFIGURER
+═══════════════════════════════════════════════════════════════
+
+BACKEND (Railway):
+├─ DATABASE_URL          : postgresql://neondb_owner:npg_1zDVUWYjNB4s@...
+├─ JWT_SECRET            : <généré avec: openssl rand -base64 32>
+├─ NODE_ENV              : production
+├─ ADMIN_EMAIL           : admin@example.com
+├─ ADMIN_PASSWORD        : VotreMotDePasse123!
+├─ SMTP_HOST             : smtp.gmail.com
+├─ SMTP_PORT             : 587
+├─ SMTP_USER             : votre-email@gmail.com
+├─ SMTP_PASS             : mot-de-passe-application-gmail
+├─ FROM_EMAIL            : noreply@votre-domaine.com
+└─ FRONTEND_URL          : https://votre-app-hiczz.vercel.app
+
+FRONTEND (Vercel):
+└─ NEXT_PUBLIC_API_URL   : https://kok-backend-production-xxxx.up.railway.app
+
+═══════════════════════════════════════════════════════════════
+  TESTS MANUELS À EFFECTUER
+═══════════════════════════════════════════════════════════════
+
+1. Ouvrir https://votre-app-hiczz.vercel.app
+2. Créer un compte patient
+3. Se connecter
+4. Prendre un rendez-vous
+5. Annuler un rendez-vous
+6. Se connecter en tant qu'admin
+7. Créer des disponibilités
+8. Voir les réservations
+
+═══════════════════════════════════════════════════════════════
+  COMPTE ADMIN PAR DÉFAUT
+═══════════════════════════════════════════════════════════════
+
+Email:       admin@example.com (ou celui configuré dans ADMIN_EMAIL)
+Mot de passe: VotreMotDePasse123! (ou celui configuré dans ADMIN_PASSWORD)
+
+⚠️  IMPORTANT: Changez le mot de passe après la première connexion !
+
+═══════════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+Problème: Le frontend ne se connecte pas au backend
+Solution:
+  vercel env rm NEXT_PUBLIC_API_URL production
+  vercel env add NEXT_PUBLIC_API_URL production
+  # Entrer la bonne URL
+  vercel --prod
+
+Problème: Erreur de connexion à la base de données
+Solution:
+  cd backend
+  railway run node -e "const { Pool } = require('pg'); new Pool({ connectionString: process.env.DATABASE_URL }).query('SELECT NOW()').then(console.log).catch(console.error);"
+
+Problème: Les emails ne sont pas envoyés
+Solution:
+  1. Créer un mot de passe d'application Gmail: https://myaccount.google.com/apppasswords
+  2. Mettre à jour SMTP_PASS dans Railway
+  3. Redémarrer: railway restart
+
+═══════════════════════════════════════════════════════════════
+  DOCUMENTATION
+═══════════════════════════════════════════════════════════════
+
+Guide Rapide:             DEPLOIEMENT_RAPIDE.md
+Guide Complet:            GUIDE_DEPLOIEMENT_COMPLET.md
+Instructions Vercel:      VERCEL_DEPLOYMENT.md
+Résumé:                   RESUME_DEPLOIEMENT.md
+
+═══════════════════════════════════════════════════════════════
+  FIN - Bon déploiement ! 🚀
+═══════════════════════════════════════════════════════════════
