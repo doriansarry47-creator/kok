@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import availabilityRoutes from './routes/availabilityRoutes';
 import bookingRoutes from './routes/bookingRoutes';
+import adminRoutes from './routes/adminRoutes';
 import { generalLimiter } from './middleware/rateLimiter';
 import logger from './config/logger';
 import { pool } from './config/database';
@@ -44,6 +45,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Route 404
 app.use((req, res) => {

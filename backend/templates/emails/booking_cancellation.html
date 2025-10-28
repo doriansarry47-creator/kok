@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annulation de rendez-vous</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .details {
+            background-color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #6b7c59;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>❌ Rendez-vous annulé</h1>
+    </div>
+    <div class="content">
+        <p>Bonjour {{patient_first_name}} {{patient_last_name}},</p>
+        
+        <p>Votre rendez-vous a été annulé.</p>
+        
+        <div class="details">
+            <h3>📅 Rendez-vous annulé</h3>
+            <p><strong>Date :</strong> {{date}}</p>
+            <p><strong>Heure :</strong> {{start_time}} - {{end_time}}</p>
+            {{#if cancellation_reason}}
+            <p><strong>Motif d'annulation :</strong> {{cancellation_reason}}</p>
+            {{/if}}
+        </div>
+        
+        <p>Si vous souhaitez reprendre un rendez-vous, n'hésitez pas à réserver un nouveau créneau en ligne.</p>
+        
+        <p style="text-align: center;">
+            <a href="{{booking_url}}" class="button">Prendre un nouveau rendez-vous</a>
+        </p>
+    </div>
+    <div class="footer">
+        <p>Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</p>
+        <p>Pour toute question, contactez-nous : {{cabinet_email}}</p>
+        <p>© {{year}} {{cabinet_name}} - Tous droits réservés</p>
+    </div>
+</body>
+</html>

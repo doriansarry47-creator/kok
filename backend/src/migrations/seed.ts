@@ -6,7 +6,28 @@ const seed = async () => {
   try {
     console.log('🌱 Initialisation des données...');
 
-    // Créer un compte admin par défaut
+    // Créer le compte admin principal : doriansarry@yahoo.fr
+    const mainAdminId = uuidv4();
+    const mainAdminEmail = 'doriansarry@yahoo.fr';
+    const mainAdminPassword = 'admin123';
+    const mainAdminPasswordHash = await bcrypt.hash(mainAdminPassword, 12);
+
+    // Vérifier si l'admin principal existe déjà
+    const existingMainAdmin = await pool.query('SELECT id FROM users WHERE email = $1', [mainAdminEmail]);
+
+    if (existingMainAdmin.rows.length === 0) {
+      await pool.query(
+        `INSERT INTO users (id, email, password_hash, role, first_name, last_name, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [mainAdminId, mainAdminEmail, mainAdminPasswordHash, 'admin', 'Dorian', 'Sarry', true]
+      );
+      console.log(`✅ Compte admin principal créé: ${mainAdminEmail}`);
+      console.log(`🔑 Mot de passe: ${mainAdminPassword}`);
+    } else {
+      console.log('ℹ️  Compte admin principal déjà existant');
+    }
+
+    // Créer un compte admin secondaire depuis les variables d'environnement
     const adminId = uuidv4();
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@therapie-sensorimotrice.fr';
     const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
@@ -21,10 +42,10 @@ const seed = async () => {
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [adminId, adminEmail, adminPasswordHash, 'admin', 'Admin', 'Système', true]
       );
-      console.log(`✅ Compte admin créé: ${adminEmail}`);
+      console.log(`✅ Compte admin secondaire créé: ${adminEmail}`);
       console.log(`🔑 Mot de passe: ${adminPassword}`);
     } else {
-      console.log('ℹ️  Compte admin déjà existant');
+      console.log('ℹ️  Compte admin secondaire déjà existant');
     }
 
     // Créer des disponibilités par défaut (Lundi à Vendredi, 9h-12h et 14h-18h)
@@ -64,10 +85,13 @@ const seed = async () => {
     console.log('✅ Disponibilités par défaut créées (Lun-Ven 9h-12h et 14h-18h, créneaux de 45min)');
 
     console.log('\n🎉 Initialisation terminée avec succès!');
-    console.log('\n📝 Informations de connexion:');
+    console.log('\n📝 Informations de connexion admin principal:');
+    console.log(`   Email: ${mainAdminEmail}`);
+    console.log(`   Mot de passe: ${mainAdminPassword}`);
+    console.log('\n📝 Informations de connexion admin secondaire:');
     console.log(`   Email: ${adminEmail}`);
     console.log(`   Mot de passe: ${adminPassword}`);
-    console.log('\n⚠️  Changez le mot de passe admin après la première connexion!\n');
+    console.log('\n⚠️  Changez les mots de passe admin après la première connexion!\n');
 
     process.exit(0);
   } catch (error) {
