@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import Toast from '@/components/Toast';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Patient {
   id: string;
@@ -20,6 +22,7 @@ export default function AdminPatientsPage() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
     fetchPatients();
@@ -66,11 +69,7 @@ export default function AdminPatientsPage() {
     setFilteredPatients(filtered);
   };
 
-  const deletePatient = async (patientId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce patient ? Cette action est irréversible.')) {
-      return;
-    }
-
+  const handleDeletePatient = async (patientId: string) => {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
@@ -82,9 +81,9 @@ export default function AdminPatientsPage() {
 
       // Recharger la liste
       fetchPatients();
-      alert('Patient supprimé avec succès');
+      setToast({ message: 'Patient supprimé avec succès', type: 'success' });
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la suppression');
+      setToast({ message: err.response?.data?.message || 'Erreur lors de la suppression', type: 'error' });
     }
   };
 
@@ -106,8 +105,9 @@ export default function AdminPatientsPage() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      setToast({ message: 'Export CSV réussi', type: 'success' });
     } catch (err) {
-      alert('Erreur lors de l\'export');
+      setToast({ message: 'Erreur lors de l\'export', type: 'error' });
     }
   };
 
@@ -217,10 +217,10 @@ export default function AdminPatientsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <button
-                        onClick={() => deletePatient(patient.id)}
+                        onClick={() => setDeleteConfirm(patient.id)}
                         className="text-red-600 hover:text-red-800 font-medium"
                       >
-                        Supprimer
+                        🗑️ Supprimer
                       </button>
                     </td>
                   </tr>
@@ -248,6 +248,31 @@ export default function AdminPatientsPage() {
           </div>
         )}
       </div>
+
+      {/* Modale de confirmation de suppression */}
+      <ConfirmDialog
+        isOpen={deleteConfirm !== null}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (deleteConfirm) {
+            handleDeletePatient(deleteConfirm);
+            setDeleteConfirm(null);
+          }
+        }}
+        title="Supprimer le patient"
+        message="Êtes-vous sûr de vouloir supprimer ce patient ? Cette action est irréversible et supprimera également tous ses rendez-vous."
+        confirmText="Supprimer définitivement"
+        type="danger"
+      />
+
+      {/* Toast de notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

@@ -672,3 +672,178 @@ export const exportPatientsCSV = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+/**
+ * Annuler un rendez-vous (admin)
+ */
+export const cancelBookingAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { cancellation_reason } = req.body;
+
+    const client = await pool.connect();
+
+    try {
+      // Vérifier que le rendez-vous existe
+      const bookingCheck = await client.query(
+        `SELECT b.*, u.email as patient_email, u.first_name as patient_first_name,
+                u.last_name as patient_last_name
+         FROM bookings b
+         JOIN users u ON b.patient_id = u.id
+         WHERE b.id = $1`,
+        [id]
+      );
+
+      if (bookingCheck.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Rendez-vous non trouvé',
+        });
+      }
+
+      const booking = bookingCheck.rows[0];
+
+      if (booking.status === 'cancelled') {
+        return res.status(400).json({
+          success: false,
+          message: 'Ce rendez-vous est déjà annulé',
+        });
+      }
+
+      // Annuler le rendez-vous
+      await client.query(
+        `UPDATE bookings 
+         SET status = 'cancelled', 
+             cancelled_at = NOW(), 
+             cancellation_reason = $1,
+             updated_at = NOW()
+         WHERE id = $2`,
+        [cancellation_reason || 'Annulé par l\'administrateur', id]
+      );
+
+      // Log d'audit
+      await client.query(
+        `INSERT INTO audit_logs (id, user_id, action, resource_type, resource_id, details, ip_address)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          uuidv4(),
+          req.user?.id,
+          'CANCEL_BOOKING_ADMIN',
+          'booking',
+          id,
+          JSON.stringify({ cancellation_reason }),
+          req.ip,
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: 'Rendez-vous annulé avec succès',
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    logger.error('Erreur lors de l\'annulation du rendez-vous', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'annulation du rendez-vous',
+    });
+  }
+};
+
+/**
+ * Modifier un rendez-vous (admin)
+ */
+export const updateBookingAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { date, start_time, end_time, status, reason } = req.body;
+
+    const client = await pool.connect();
+
+    try {
+      // Vérifier que le rendez-vous existe
+      const bookingCheck = await client.query('SELECT id FROM bookings WHERE id = $1', [id]);
+
+      if (bookingCheck.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Rendez-vous non trouvé',
+        });
+      }
+
+      // Construire la requête de mise à jour dynamiquement
+      const updates: string[] = [];
+      const params: any[] = [];
+      let paramIndex = 1;
+
+      if (date !== undefined) {
+        updates.push(`date = $${paramIndex}`);
+        params.push(date);
+        paramIndex++;
+      }
+      if (start_time !== undefined) {
+        updates.push(`start_time = $${paramIndex}`);
+        params.push(start_time);
+        paramIndex++;
+      }
+      if (end_time !== undefined) {
+        updates.push(`end_time = $${paramIndex}`);
+        params.push(end_time);
+        paramIndex++;
+      }
+      if (status !== undefined) {
+        updates.push(`status = $${paramIndex}`);
+        params.push(status);
+        paramIndex++;
+      }
+      if (reason !== undefined) {
+        updates.push(`reason = $${paramIndex}`);
+        params.push(reason);
+        paramIndex++;
+      }
+
+      if (updates.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Aucune donnée à mettre à jour',
+        });
+      }
+
+      updates.push(`updated_at = NOW()`);
+      params.push(id);
+
+      const query = `UPDATE bookings SET ${updates.join(', ')} WHERE id = $${paramIndex}`;
+      await client.query(query, params);
+
+      // Log d'audit
+      await client.query(
+        `INSERT INTO audit_logs (id, user_id, action, resource_type, resource_id, details, ip_address)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          uuidv4(),
+          req.user?.id,
+          'UPDATE_BOOKING_ADMIN',
+          'booking',
+          id,
+          JSON.stringify(req.body),
+          req.ip,
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: 'Rendez-vous modifié avec succès',
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    logger.error('Erreur lors de la modification du rendez-vous', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la modification du rendez-vous',
+    });
+  }
+};

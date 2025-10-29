@@ -11,6 +11,8 @@ import {
   changeAdminPassword,
   exportBookingsCSV,
   exportPatientsCSV,
+  cancelBookingAdmin,
+  updateBookingAdmin,
 } from '../controllers/adminController';
 import { logAudit } from '../middleware/auditLog';
 
@@ -26,6 +28,8 @@ router.get('/dashboard', getDashboardStats);
 // Gestion des rendez-vous
 router.get('/bookings', getAllBookings);
 router.post('/bookings', logAudit('CREATE_BOOKING_ADMIN'), createBookingForPatient);
+router.put('/bookings/:id', logAudit('UPDATE_BOOKING_ADMIN'), updateBookingAdmin);
+router.post('/bookings/:id/cancel', logAudit('CANCEL_BOOKING_ADMIN'), cancelBookingAdmin);
 router.get('/bookings/export/csv', exportBookingsCSV);
 
 // Gestion des patients
