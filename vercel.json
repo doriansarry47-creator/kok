@@ -1,14 +1,36 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "functions": {
-    "api/index.js": {
+    "api/**/*.ts": {
       "runtime": "nodejs20.x"
     }
   },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "source": "/api/auth/login",
+      "destination": "/api/auth/login.ts"
+    },
+    {
+      "source": "/api/auth/register",
+      "destination": "/api/auth/register.ts"
+    },
+    {
+      "source": "/api/auth/verify",
+      "destination": "/api/auth/verify.ts"
+    },
+    {
+      "source": "/api/appointments",
+      "destination": "/api/appointments/index.ts"
+    },
+    {
+      "source": "/api/practitioners",
+      "destination": "/api/practitioners/index.ts"
+    },
+    {
+      "source": "/api/test",
+      "destination": "/api/test.ts"
     }
   ]
 }
