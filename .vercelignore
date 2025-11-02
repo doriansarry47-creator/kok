@@ -1,0 +1,30 @@
+# Dependencies
+node_modules
+
+# Build artifacts
+dist
+build
+.next
+
+# IDE files
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Env files
+.env
+.env.*
+!/.env.production
+
+# Development files  
+*.md
+.replit
+replit.nix
+build-*.cjs
+
